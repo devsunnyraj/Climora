@@ -114,7 +114,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoaded, isSignedIn, clerkUser?.id]);
 
-  const value: AuthCtx = { user, token, isLoaded, isSignedIn, logout, refreshMe };
+  const value: AuthCtx = { 
+    user, 
+    token, 
+    isLoaded: isLoaded ?? false, 
+    isSignedIn: isSignedIn ?? false, 
+    logout, 
+    refreshMe 
+  };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

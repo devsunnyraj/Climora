@@ -6,9 +6,17 @@ interface VoiceCommand {
   description: string;
 }
 
+// Extend the Window interface for Speech Recognition
+declare global {
+  interface Window {
+    SpeechRecognition: any;
+    webkitSpeechRecognition: any;
+  }
+}
+
 class VoiceAssistantService {
-  private recognition: SpeechRecognition | null = null;
-  private synthesis: SpeechSynthesis;
+  private recognition: any | null = null;
+  private synthesis: SpeechSynthesis | undefined;
   private isListening = false;
   private language = 'en-US';
   private commands: VoiceCommand[] = [];
@@ -22,10 +30,11 @@ class VoiceAssistantService {
   }
 
   private initializeSpeechRecognition(): void {
-    if ('webkitSpeechRecognition' in window) {
-      this.recognition = new (window as any).webkitSpeechRecognition();
-    } else if ('SpeechRecognition' in window) {
-      this.recognition = new (window as any).SpeechRecognition();
+    if (typeof window !== 'undefined') {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        this.recognition = new SpeechRecognition();
+      }
     }
 
     if (this.recognition) {
@@ -33,12 +42,12 @@ class VoiceAssistantService {
       this.recognition.interimResults = false;
       this.recognition.lang = this.language;
 
-      this.recognition.onresult = (event) => {
+      this.recognition.onresult = (event: any) => {
         const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase().trim();
         this.processCommand(transcript);
       };
 
-      this.recognition.onerror = (event) => {
+      this.recognition.onerror = (event: any) => {
         // Speech recognition error
         this.isListening = false;
       };
@@ -117,6 +126,8 @@ class VoiceAssistantService {
   }
 
   speak(text: string, lang?: string): void {
+    if (!this.synthesis) return;
+    
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = lang || this.language;
     utterance.rate = 0.9;
